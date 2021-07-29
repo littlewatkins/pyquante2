@@ -14,12 +14,11 @@ from pyquante2.constants import ang2bohr
 from pyquante2.utils import norm2
 
 class atom(object):
-    """creates an atom that can be used in calculations
+    """creates an atom that can be used in calculations using the atomic number
+    and the location in cartesian coordinates
     """
     def __init__(self,atno,x,y,z,**kwargs):
-        """initializes the atom with the atomic number and its coordinates in 
-        cartesian space
-
+        """
         Parameters
         ----------
         atno : int
