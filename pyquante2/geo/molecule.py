@@ -165,7 +165,7 @@ class molecule(object):
         return sum(ati.atno*atj.atno/ati.distance(atj) for ati,atj in upairs(self))
 
     def nel(self):
-        """Number of electrons of the molecule
+        """Number of electrons in the molecule
 
         Returns
         -------
@@ -173,14 +173,48 @@ class molecule(object):
         """
         return sum(atom.atno for atom in self) - self.charge
     
-    def nocc(self): return sum(divmod(self.nel(),2))
+    def nocc(self):
+        """number of ??
+        """
+        return sum(divmod(self.nel(),2))
+
+    def nopen(self):
+        """number of unpaired electrons
+
+        Returns
+        -------
+        int
+        """
+        return self.multiplicity-1
+    
     def nclosed(self):
+        """number of paired electrons or closed shells
+
+        Returns
+        -------
+        int
+        """
         nc,ierr = divmod(self.nel()-self.nopen(),2)
         assert ierr == 0, "Error in molecule, multiplicity, nclosed, nopen"
         return nc
-    def nopen(self): return self.multiplicity-1
-    def nup(self): return self.nclosed()+self.nopen()
-    def ndown(self): return self.nclosed()
+
+    def nup(self):
+        """number of spin up electrons??
+
+        Returns
+        -------
+        int
+        """
+        return self.nclosed()+self.nopen()
+    
+    def ndown(self):
+        """number of spin down electrons??
+
+        Returns
+        -------
+        int
+        """
+        return self.nclosed()
 
     def xyz(self,title=None,fobj=None):
         """
@@ -202,12 +236,30 @@ class molecule(object):
         """
         Make a PyQuante1 Molecule object that can be passed into that program for
         testing/debugging purposes.
+
+        Returns
+        -------
+        class
         """
         from PyQuante import Molecule
         atuples = [(a.atno,tuple(a.r)) for a in self.atoms]
         return Molecule(name,atuples,charge=self.charge,multiplicity=self.multiplicity)
 
     def bbox(self,padding=5.,BIG=1e12):
+        """generates the coordinates of a box geometry in cartesian coordinates
+
+        Parameters
+        ----------
+        padding : float, optional
+            additional space, by default 5.
+        BIG : int,float, optional
+            #TODO: [description], by default 1e12
+
+        Returns
+        -------
+        int,float
+            multiple coordinates
+        """
         xmin = ymin = zmin = BIG
         xmax = ymax = zmax = -BIG
         for atom in self.atoms:
@@ -246,16 +298,48 @@ class molecule(object):
                 s.append("%s%d" % (symbol[key],cnt[key]))
         return "".join(s)
 
-    def mass(self): return sum(at.mass() for at in self.atoms)
-    def com(self): return sum(at.mass()*at.r for at in self.atoms)/self.mass()
+    def mass(self):
+        """computes the total mass of the molecule based on the atoms
+
+        Returns
+        -------
+        float
+            total mass
+        """
+        return sum(at.mass() for at in self.atoms)
+
+    def com(self):
+        """calculates the center of mass of the molecule
+
+        Returns
+        -------
+        float
+            center of mass
+        """
+        return sum(at.mass()*at.r for at in self.atoms)/self.mass()
 
     def center(self):
+        """computes the center of the atoms and reassigns it to the atom r
+        """
         r_com = self.com()
         for at in self.atoms:
             at.r = at.r - r_com
         return
 
     def bonds(self,scale=1.1):
+        """generates a list of tuples based on the comparison of location of an 
+        atom and the scaled length of the atom radius
+
+        Parameters
+        ----------
+        scale : float, optional
+            scaling factor, by default 1.1
+
+        Returns
+        -------
+        list
+            list of tuples with indices for the atoms
+        """
         from pyquante2.utils import pairs
         bonds = []
         for i,ati in enumerate(self.atoms):
