@@ -37,6 +37,13 @@ class molecule(object):
     1
     """
     def __init__(self,atomlist=[],**kwargs):
+        """initializes the molecule
+
+        Parameters
+        ----------
+        atomlist : list, optional
+            list of atoms that make up the molecule, by default []
+        """
         self.atoms = []
         self.charge = int(kwargs.get('charge',settings.molecular_charge))
         self.multiplicity = kwargs.get('multiplicity')
@@ -51,23 +58,66 @@ class molecule(object):
             self.set_multiplicity()
         return
 
-    def __getitem__(self,i): return self.atoms.__getitem__(i)
-    def __len__(self): return self.atoms.__len__()
+    def __getitem__(self,i):
+        """grabs the atom corresponding to the specified index
+
+        Parameters
+        ----------
+        i : int
+            index for an atom in the atoms list
+
+        Returns
+        -------
+        class
+            the desired atom
+        """
+        return self.atoms.__getitem__(i)
+
+    def __len__(self):
+        """returns the length of the atoms list
+
+        Returns
+        -------
+        int
+            length of list
+        """
+        return self.atoms.__len__()
 
     def __repr__(self):
+        """generates a string related to the created molecule
+
+        Returns
+        -------
+        str
+            repr for the molecule
+        """
         lines = ["Stoichiometry = %s, Charge = %d, Multiplicity = %d" %\
                  (self.stoich(),self.charge,self.multiplicity)]
         lines.extend(repr(atom) for atom in self.atoms)
         return "\n".join(lines)
 
     def set_multiplicity(self):
+        """sets the multiplicity if none is passed in
+        """
         if self.nel() % 2:
             self.multiplicity = 2
         else:
             self.multiplicity = 1
         return
-
+    
     def html(self,tablehead=True):
+        """generates an html table describing the molecule
+
+        Parameters
+        ----------
+        tablehead : bool, optional
+            #TODO: [description], by default True
+
+        Returns
+        -------
+        xml.etree.ElementTree.Element
+            #TODO: [description]
+        """
         import xml.etree.ElementTree as ET
         top = ET.Element("p")
         h2 = ET.SubElement(top,"h2")
@@ -86,16 +136,41 @@ class molecule(object):
         return top
 
     def _repr_html_(self,tablehead=True):
+        """generates a string represenation of the html 
+
+        Parameters
+        ----------
+        tablehead : bool, optional
+            [description], by default True
+
+        Returns
+        -------
+        str
+            html of the molecule
+        """
         import xml.etree.ElementTree as ET
         top = ET.Element("html")
         top.append(self.html(tablehead=tablehead))
         return ET.tostring(top)
 
     def nuclear_repulsion(self):
+        """Calculates part of the coulomb repulsion from the atoms?? using 
+        the upairs function in utils.py
+
+        Returns
+        -------
+        float
+            [description]
+        """
         return sum(ati.atno*atj.atno/ati.distance(atj) for ati,atj in upairs(self))
 
     def nel(self):
-        "Number of electrons of the molecule"
+        """Number of electrons of the molecule
+
+        Returns
+        -------
+        int
+        """
         return sum(atom.atno for atom in self) - self.charge
     
     def nocc(self): return sum(divmod(self.nel(),2))
@@ -211,6 +286,8 @@ class molecule(object):
         index = self.get_index(center,tol)
         return self.atoms[index].tag(index)
 
+
+# separate from the molecule class
 def read_xyz(fname):
     f = open(fname)
     line = f.readline()
